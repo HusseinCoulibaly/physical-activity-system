@@ -1,3 +1,4 @@
+// server.js
 const express = require('express');
 const connectDB = require('./config/db');
 require('dotenv').config();
@@ -7,8 +8,8 @@ connectDB();
 
 app.use(express.json());
 
-// Routes
-app.use('/api/health', require('./routes/healthRoutes'));
+// Routes pour Google Fit
+app.use('/api/googlefit', require('./routes/googleFitRoutes'));
 
-const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`Health Analysis Service running on port ${PORT}`));
+const PORT = process.env.PORT || 5002;
+app.listen(PORT, () => console.log(`Google Fit Service running on port ${PORT}`));
