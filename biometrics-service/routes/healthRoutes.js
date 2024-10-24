@@ -3,8 +3,11 @@ const { addHealthData, getHealthSummary, addMockHealthData } = require('../contr
 
 const router = express.Router();
 
-router.post('/add', addHealthData); // Ajouter des données réelles (si un jour on intègre les API)
-router.get('/:userId/summary', getHealthSummary); // Obtenir un résumé des données de santé
-router.post('/mock/add', addMockHealthData); // Ajouter des données de santé mockées
+// Route pour ajouter des données de santé mockées
+router.post('/mock/add', addMockHealthData);
+
+// Ajouter d'autres routes si nécessaire
+router.post('/add', addHealthData); // Pour ajouter des données réelles
+router.get('/:userId/summary', getHealthSummary); // Pour obtenir un résumé des données
 
 module.exports = router;
