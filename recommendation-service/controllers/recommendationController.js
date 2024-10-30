@@ -1,49 +1,69 @@
-
 const Recommendation = require('../models/Recommendation');
 const axios = require('axios');
-require('dotenv').config();
+const { spawn } = require('child_process');
+let responseSent = false;
 
 exports.generateRecommendation = async (req, res) => {
-  const { userId, goals } = req.body;
+  const { userId } = req.body;
+  let responseSent = false;
 
   try {
-    // Définir le token JWT (à remplacer par un vrai token valide pour l'utilisateur)
-    const token = process.env.USER_JWT_TOKEN; // Assurez-vous d'avoir un token valide dans le fichier .env
-
-    // Effectuer la requête vers biometrics-service avec le token dans l'en-tête Authorization
-    const biometricsResponse = await axios.get(`http://localhost:5001/api/health/${userId}/summary`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const biometricsResponse = await axios.get(`http://localhost:5001/api/health/${userId}/summary`);
     const biometricsData = biometricsResponse.data;
 
-    // Logique de recommandation simplifiée
-    let activities = [];
-    if (goals === 'perte de poids') {
-      activities = ['cardio', 'course à pied', 'marche rapide'];
-    } else if (goals === 'prise de muscle') {
-      activities = ['musculation', 'haltérophilie', 'crossfit'];
-    } else if (goals === 'amélioration cardio') {
-      activities = ['course', 'vélo', 'natation'];
+    const { averageHeartRate, averageCalories, averageSteps } = biometricsData;
+
+    if (averageHeartRate === undefined || averageCalories === undefined || averageSteps === undefined) {
+      return res.status(400).json({ message: 'Données biométriques manquantes ou incorrectes' });
     }
 
-    // Sauvegarde de la recommandation
-    const recommendation = await Recommendation.create({ userId, activities });
-    res.status(201).json(recommendation);
+    console.log('Features:', averageHeartRate, averageCalories, averageSteps);
+
+    const pythonProcess = spawn('python', ['predict.py', averageHeartRate, averageCalories, averageSteps]);
+
+    pythonProcess.stdout.on('data', async (data) => {
+      if (!responseSent) {
+        responseSent = true;
+        const recommendedActivity = data.toString().trim();
+        const recommendation = await Recommendation.create({
+          userId,
+          activities: [recommendedActivity],
+        });
+        res.status(201).json(recommendation);
+      }
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      if (!responseSent) {
+        responseSent = true;
+        console.error(`Erreur dans le script Python: ${data}`);
+        res.status(500).json({ message: 'Erreur lors de la génération de la recommandation' });
+      }
+    });
+
+    pythonProcess.on('exit', (code) => {
+      if (!responseSent && code !== 0) {
+        responseSent = true;
+        res.status(500).json({ message: 'Erreur dans l’exécution du modèle' });
+      }
+    });
+
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Erreur lors de la génération de la recommandation' });
+    if (!responseSent) {
+      responseSent = true;
+      console.error(error);
+      res.status(500).json({ message: 'Erreur lors de la génération de la recommandation' });
+    }
   }
 };
 
 exports.getRecommendations = async (req, res) => {
-    const { userId } = req.params;
-  
-    try {
-      const recommendations = await Recommendation.find({ userId });
-      res.json(recommendations);
-    } catch (error) {
-      res.status(500).json({ message: 'Erreur lors de la récupération des recommandations' });
-    }
-  };
+  const { userId } = req.params;
+
+  try {
+    const recommendations = await Recommendation.find({ userId });
+    res.json(recommendations);
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur lors de la récupération des recommandations' });
+  }
+};

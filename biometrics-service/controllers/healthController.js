@@ -44,20 +44,28 @@ exports.getHealthSummary = async (req, res) => {
       return res.status(404).json({ message: 'Aucune donnée de santé trouvée pour cet utilisateur' });
     }
 
+    // Calcul des moyennes et des totaux
     const totalCalories = healthData.reduce((acc, data) => acc + data.caloriesBurned, 0);
     const averageCalories = totalCalories / healthData.length;
+
     const totalSteps = healthData.reduce((acc, data) => acc + data.steps, 0);
     const averageSteps = totalSteps / healthData.length;
 
+    const totalHeartRate = healthData.reduce((acc, data) => acc + data.heartRate, 0);
+    const averageHeartRate = totalHeartRate / healthData.length;
+
+    // Répondre avec toutes les moyennes requises
     res.json({
       totalEntries: healthData.length,
       totalCalories,
       averageCalories,
       totalSteps,
       averageSteps,
+      totalHeartRate,
+      averageHeartRate
     });
   } catch (error) {
-    console.error(error); // Afficher l'erreur dans la console
+    console.error(error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };
