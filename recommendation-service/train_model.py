@@ -1,21 +1,16 @@
 import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.neighbors import KNeighborsClassifier
 import joblib
+from sklearn.neighbors import KNeighborsClassifier
 
-# Charger les données d'entraînement et de test
-X_train = pd.read_csv('dataset/X_train.txt', delim_whitespace=True, header=None)
-y_train = pd.read_csv('dataset/y_train.txt', delim_whitespace=True, header=None)
-X_test = pd.read_csv('dataset/X_test.txt', delim_whitespace=True, header=None)
-y_test = pd.read_csv('dataset/y_test.txt', delim_whitespace=True, header=None)
-
-# Fusionner les ensembles d'entraînement et de test
-X = pd.concat([X_train, X_test], axis=0)
-y = pd.concat([y_train, y_test], axis=0)
+# Charger les données d'entraînement et de test avec `sep='\s+'` pour éviter l'avertissement
+X_train = pd.read_csv('dataset/X_train.txt', sep='\s+', header=None)
+y_train = pd.read_csv('dataset/y_train.txt', sep='\s+', header=None)
+X_test = pd.read_csv('dataset/X_test.txt', sep='\s+', header=None)
+y_test = pd.read_csv('dataset/y_test.txt', sep='\s+', header=None)
 
 # Renommer la colonne de la cible pour une meilleure lisibilité
-y.columns = ['activity']
+y_train.columns = ['activity']
+y_test.columns = ['activity']
 
 # Mapper les activités en étiquettes lisibles
 activity_labels = {
@@ -26,7 +21,13 @@ activity_labels = {
     5: "standing",
     6: "laying"
 }
-y['activity'] = y['activity'].map(activity_labels)
+y_train['activity'] = y_train['activity'].map(activity_labels)
+y_test['activity'] = y_test['activity'].map(activity_labels)
 
-# Diviser les données pour l'entraînement et la validation
-X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42)
+# Entraîner un modèle KNN
+model = KNeighborsClassifier(n_neighbors=5)
+model.fit(X_train, y_train.values.ravel())
+
+# Sauvegarder le modèle dans un fichier
+joblib.dump(model, 'recommendation_model.pkl')
+print("Modèle de recommandation entraîné et sauvegardé.")
