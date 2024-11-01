@@ -1,6 +1,7 @@
 // server.js
 const express = require('express');
 const { connectDB, sequelize } = require('./config/database'); // Import de sequelize
+const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
@@ -8,6 +9,7 @@ app.use(express.json());
 
 
 connectDB();
+app.use(cors());
 
 
 app.use('/api/users', require('./routes/userRoutes'));

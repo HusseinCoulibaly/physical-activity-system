@@ -1,6 +1,7 @@
 // controllers/userController.js
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 const generateToken = (id) => {
@@ -9,20 +10,40 @@ const generateToken = (id) => {
 
 // Inscription
 exports.registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
-  try {
-    const userExists = await User.findOne({ where: { email } });
-    if (userExists) return res.status(400).json({ message: 'Utilisateur déjà enregistré' });
+  const { name, email, password, dob, goals } = req.body;
 
-    const user = await User.create({ name, email, password });
-    res.status(201).json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      token: generateToken(user.id),
+  try {
+    const existingUser = await User.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ message: "L'utilisateur existe déjà" });
+    }
+
+    const user = await User.create({ name, email, password, dob, goals });
+
+    // Configuration de Nodemailer
+    const transporter = nodemailer.createTransport({
+      service: 'gmail', // ou le service que tu utilises (ex: Yahoo, Outlook)
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
     });
+
+    // Options de l'email de confirmation
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Confirmation d'inscription",
+      text: `Bonjour ${name},\n\nVotre inscription a été réussie ! Bienvenue dans la famille teccfit 🎉😊👍.\n\nMerci,\nL'équipe`,
+    };
+
+    // Envoyer l'email de confirmation
+    await transporter.sendMail(mailOptions);
+
+    res.status(201).json({ message: 'Utilisateur créé avec succès, un email de confirmation a été envoyé.' });
   } catch (error) {
-    res.status(500).json({ message: 'Erreur serveur' });
+    console.error("Erreur lors de l'inscription :", error);
+    res.status(500).json({ message: "Erreur serveur lors de l'inscription" });
   }
 };
 
@@ -87,6 +108,21 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
+exports.checkSession = async (req, res) => {
+  try {
+    // On s'attend à ce que le token soit dans les headers
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ message: "Non autorisé, token manquant" });
+
+    // Vérifier le token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded) return res.status(401).json({ message: "Token invalide" });
+
+    res.status(200).json({ user: decoded }); // Retourne les informations de l'utilisateur décodé
+  } catch (error) {
+    res.status(401).json({ message: "Session expirée ou token invalide" });
+  }
+};
 // Récupérer tous les utilisateurs
 exports.getAllUsers = async (req, res) => {
   try {
@@ -97,4 +133,8 @@ exports.getAllUsers = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Erreur serveur' });
   }
+};
+
+exports.logout = async (req, res) => {
+  res.status(200).json({ message: "Déconnexion réussie" });
 };
