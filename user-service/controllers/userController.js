@@ -63,6 +63,7 @@ exports.loginUser = async (req, res) => {
       res.status(401).json({ message: 'Identifiants invalides' });
     }
   } catch (error) {
+    console.error('Erreur de connexion :', error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };
@@ -110,17 +111,18 @@ exports.deleteUser = async (req, res) => {
 
 exports.checkSession = async (req, res) => {
   try {
-    // On s'attend à ce que le token soit dans les headers
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) return res.status(401).json({ message: "Non autorisé, token manquant" });
 
-    // Vérifier le token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded) return res.status(401).json({ message: "Token invalide" });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET); // Vérifie le token
 
-    res.status(200).json({ user: decoded }); // Retourne les informations de l'utilisateur décodé
+    res.status(200).json({ user: decoded });
   } catch (error) {
-    res.status(401).json({ message: "Session expirée ou token invalide" });
+    if (error.name === 'TokenExpiredError') {
+      // Gestion spécifique du cas de l'expiration
+      return res.status(401).json({ message: "Session expirée, veuillez vous reconnecter" });
+    }
+    res.status(401).json({ message: "Token invalide" });
   }
 };
 // Récupérer tous les utilisateurs
