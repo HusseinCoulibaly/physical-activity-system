@@ -1,9 +1,12 @@
 const express = require('express');
+const cors = require('cors');
 const dotenv = require('dotenv');
+
 const connectDB = require('./config/db'); // Si tu as une base de données pour stocker les préférences
 dotenv.config();
 
 const app = express();
+app.use(cors());
 connectDB();
 app.use(express.json());
 app.use('/api/notifications', require('./routes/notificationRoutes'));
