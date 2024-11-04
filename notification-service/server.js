@@ -1,6 +1,7 @@
+const dotenv = require('dotenv');
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
+
 
 const connectDB = require('./config/db'); // Si tu as une base de données pour stocker les préférences
 dotenv.config();

@@ -1,4 +1,3 @@
-
 const NotificationPreference = require('../models/NotificationPreference');
 
 // Créer ou mettre à jour les préférences de notification
