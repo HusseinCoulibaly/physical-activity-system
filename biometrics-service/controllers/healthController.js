@@ -54,7 +54,15 @@ exports.getHealthSummary = async (req, res) => {
     const totalHeartRate = healthData.reduce((acc, data) => acc + data.heartRate, 0);
     const averageHeartRate = totalHeartRate / healthData.length;
 
-    // Répondre avec toutes les moyennes requises
+    // Construire la liste des données de santé individuelles pour chaque jour
+    const entries = healthData.map(data => ({
+      date: data.date,
+      caloriesBurned: data.caloriesBurned,
+      steps: data.steps,
+      heartRate: data.heartRate
+    }));
+
+    // Répondre avec les moyennes, les totaux, et les entrées individuelles
     res.json({
       totalEntries: healthData.length,
       totalCalories,
@@ -62,10 +70,12 @@ exports.getHealthSummary = async (req, res) => {
       totalSteps,
       averageSteps,
       totalHeartRate,
-      averageHeartRate
+      averageHeartRate,
+      entries // Ajouter les données individuelles
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };
+

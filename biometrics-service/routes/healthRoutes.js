@@ -11,4 +11,5 @@ router.post('/mock/add',addMockHealthData);
 router.post('/add',/*authenticateToken,*/ addHealthData,validateHealthData); // Pour ajouter des données réelles
 router.get('/:userId/summary', /*authenticateToken,*/getHealthSummary); // Pour obtenir un résumé des données
 
+
 module.exports = router;

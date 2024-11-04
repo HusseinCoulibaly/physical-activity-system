@@ -2,43 +2,43 @@ const Notification = require('../models/Notification');
 const NotificationPreference = require('../models/NotificationPreference');
 const admin = require('../firebase-config'); // Firebase configuration
 const nodemailer = require('nodemailer');
-const axios = require('axios'); 
-// Envoyer une notification push et l'enregistrer en base
+const axios = require('axios');
+const getMessage = require('../utils/notificationMessages');
+
+// Envoyer une notification push personnalisée
 exports.sendPushNotification = async (req, res) => {
-  const { userId, message, type } = req.body;
+  const { userId, type } = req.body;
 
   try {
     const preference = await NotificationPreference.findOne({ userId });
-
     if (!preference || !preference.types.includes(type) || !preference.channels.includes('push')) {
       return res.status(400).json({ message: 'Préférences utilisateur : notification non envoyée' });
     }
+
+    const message = getMessage(type, preference.frequency); // Message personnalisé en fonction du type et de la fréquence
 
     const payload = {
       message: {
         topic: userId,
         notification: {
-          title: "Rappel d'activité physique",
+          title: "Notification Teccartfit",
           body: message,
         },
       },
     };
 
-    // Utilisation de l'API FCM via axios pour envoyer la notification push
-    const response = await axios.post(
+    await axios.post(
       `https://fcm.googleapis.com/v1/projects/${process.env.FCM_PROJECT_ID}/messages:send`,
       payload,
       {
         headers: {
-          Authorization: `Bearer ${process.env.FCM_SERVER_KEY}`,
+          Authorization: `key=${process.env.FCM_SERVER_KEY}`,
           'Content-Type': 'application/json',
         },
       }
     );
 
-    // Enregistrer la notification en base de données
     await Notification.create({ userId, message, type });
-
     res.status(200).json({ message: 'Notification push envoyée' });
   } catch (error) {
     console.error("Erreur d'envoi de la notification push:", error);
@@ -46,16 +46,18 @@ exports.sendPushNotification = async (req, res) => {
   }
 };
 
+
 // Envoyer un email et l'enregistrer en base
 exports.sendEmailNotification = async (req, res) => {
-  const { userId, email, message, type } = req.body;
+  const { userId, email, type } = req.body;
 
   try {
     const preference = await NotificationPreference.findOne({ userId });
-
     if (!preference || !preference.types.includes(type) || !preference.channels.includes('email')) {
       return res.status(400).json({ message: 'Préférences utilisateur : email non envoyé' });
     }
+
+    const message = getMessage(type, preference.frequency); // Message personnalisé en fonction du type et de la fréquence
 
     const transporter = nodemailer.createTransport({
       service: 'gmail',
@@ -68,15 +70,13 @@ exports.sendEmailNotification = async (req, res) => {
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: "Rappel d'activité physique",
+      subject: "Notification Teccartfit",
       text: message,
     };
 
     await transporter.sendMail(mailOptions);
 
-    // Enregistrer la notification en base de données
     await Notification.create({ userId, message, type });
-
     res.status(200).json({ message: 'Email envoyé avec succès' });
   } catch (error) {
     console.error("Erreur d'envoi de l'email:", error);
