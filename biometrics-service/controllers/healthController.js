@@ -9,12 +9,11 @@ exports.addMockHealthData = async (req, res) => {
     const healthData = await HealthData.create(mockHealthData);
     res.status(201).json(healthData);
   } catch (error) {
-    console.error(error); // Afficher l'erreur dans la console
+    console.error(error); 
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };
 
-// Ajouter des données de santé réelles
 exports.addHealthData = async (req, res) => {
   const { userId, heartRate, caloriesBurned, steps } = req.body;
 
@@ -28,12 +27,12 @@ exports.addHealthData = async (req, res) => {
     });
     res.status(201).json(healthData);
   } catch (error) {
-    console.error(error); // Afficher l'erreur dans la console
+    console.error(error); 
     res.status(500).json({ message: 'Erreur serveur' });
   }
 };
 
-// Obtenir un résumé des données de santé
+
 exports.getHealthSummary = async (req, res) => {
   const { userId } = req.params;
 
@@ -44,7 +43,7 @@ exports.getHealthSummary = async (req, res) => {
       return res.status(404).json({ message: 'Aucune donnée de santé trouvée pour cet utilisateur' });
     }
 
-    // Calcul des moyennes et des totaux
+   
     const totalCalories = healthData.reduce((acc, data) => acc + data.caloriesBurned, 0);
     const averageCalories = totalCalories / healthData.length;
 
@@ -71,7 +70,7 @@ exports.getHealthSummary = async (req, res) => {
       averageSteps,
       totalHeartRate,
       averageHeartRate,
-      entries // Ajouter les données individuelles
+      entries 
     });
   } catch (error) {
     console.error(error);

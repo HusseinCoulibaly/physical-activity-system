@@ -1,6 +1,6 @@
 const Feedback = require('../models/Feedback');
 
-// Ajouter un feedback
+
 exports.addFeedback = async (req, res) => {
   const { userId, recommendationId, rating, comment } = req.body;
   try {
@@ -12,7 +12,6 @@ exports.addFeedback = async (req, res) => {
   }
 };
 
-// Récupérer les feedbacks d'une recommandation
 exports.getFeedbacksByRecommendation = async (req, res) => {
   const { recommendationId } = req.params;
   try {

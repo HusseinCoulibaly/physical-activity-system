@@ -1,4 +1,3 @@
-# predict.py
 import sys
 import joblib
 import numpy as np
@@ -10,7 +9,7 @@ model = joblib.load('recommendation_model.pkl')
 try:
     input_features = np.array([float(x) for x in sys.argv[1:]]).reshape(1, -1)
     prediction = model.predict(input_features)
-    print(prediction[0])  # Affiche la prédiction pour Node.js
+    print(prediction[0])  
 except Exception as e:
     print(f"Erreur dans le script Python: {e}")
-    sys.exit(1)  # Sortie avec code d'erreur en cas de problème
+    sys.exit(1)  

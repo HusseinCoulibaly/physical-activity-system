@@ -5,7 +5,6 @@ const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
-  // Si aucun token n'est fourni, retourne 401
   if (!token) {
     return res.status(401).json({ message: 'Accès refusé : Token manquant' });
   }
